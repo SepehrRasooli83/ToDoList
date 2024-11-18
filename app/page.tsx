@@ -1,47 +1,68 @@
+'use client'
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function Home() {
-  const data = [
-    { number: 1, description: "Push Up" },
-    { number: 2, description: "Read a book" },
-    { number: 3, description: "Get to work" },
-  ];
+  const [todos, setTodos] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const response = await fetch('/api/todo', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch todos');
+        }
+
+        const data = await response.json();
+        setTodos(data);
+      } catch (err) {
+        setError("Failed to fetch todos");
+      }
+    };
+
+    fetchTodos();
+  }, []);  // Empty dependency array ensures this only runs on client mount
 
   return (
     <>
-      <div style={{ padding: "20px" }}>
-        <button
-          style={{ padding: "10px", color: "green", border: "2px solid green" }}
-        >
-          <Link href={"/create"}>Create New</Link>
+      <div className="p-5">
+        <button className="px-4 py-2 text-white bg-green-500 border-2 border-green-500 rounded hover:bg-green-600">
+          <Link href="/create">Create New</Link>
         </button>
       </div>
-      <div style={{ padding: "10px" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
+
+      <div className="p-2">
+        {error && <div className="text-red-500">{error}</div>}
+
+        <table className="w-full border border-collapse border-gray-300">
+          <thead className="bg-gray-200">
             <tr>
-              <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                Number
-              </th>
-              <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                Description
-              </th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Number</th>
+              <th className="border border-gray-300 px-4 py-2 text-left">Description</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((item) => (
-              <tr key={item.number}>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {item.number}
-                </td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+            {todos.map((item) => (
+              <tr key={item.number} className="hover:bg-gray-100">
+                <td className="border border-gray-300 px-4 py-2">{item.number}</td>
+                <td className="border border-gray-300 px-4 py-2">
                   {item.description}
-                  <button style={{ padding: "5px", color: "red" }}>
-                    Delete
-                  </button>
-                  <button style={{ padding: "5px", color: "orange" }}>
-                    <Link href={"/edit"}>Edit</Link>
-                  </button>
+                  <div className="flex gap-2 mt-2">
+                    <button className="px-3 py-1 text-white bg-red-500 rounded hover:bg-red-600">
+                      Delete
+                    </button>
+                    <button className="px-3 py-1 text-white bg-orange-500 rounded hover:bg-orange-600">
+                      <Link href={`/edit/${item.number}`}>Edit</Link>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
